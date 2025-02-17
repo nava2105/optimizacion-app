@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h2>Dynamic Programming - Knapsack Problem</h2>
+    <form id="knapsackForm">
+        <div class="mb-3">
+            <label for="capacity" class="form-label">Knapsack Capacity</label>
+            <input type="number" class="form-control" id="capacity" required>
+        </div>
+        <div class="mb-3">
+            <label for="items" class="form-label">Items (weight,value per line)</label>
+            <textarea class="form-control" id="items" rows="5" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Solve</button>
+    </form>
+    <h3 class="mt-4">Result:</h3>
+    <pre id="knapsackResult"></pre>
+</div>
+
+<script>
+document.getElementById("knapsackForm").addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    let capacity = Number(document.getElementById("capacity").value);
+    let items = document.getElementById("items").value.split("\n").map(line => {
+        let parts = line.split(",");
+        return {"weight": Number(parts[0]), "value": Number(parts[1])};
+    });
+
+    fetch("/api/dynamic-programming", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({capacity, items})
+    })
+    .then(response => response.json())
+    .then(data => document.getElementById("knapsackResult").textContent = JSON.stringify(data, null, 2));
+});
+</script>
+{% endblock %}

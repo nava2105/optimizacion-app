@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h2>Transport Optimization</h2>
+    <form id="transportForm">
+        <div class="mb-3">
+            <label for="supply" class="form-label">Supply (comma-separated)</label>
+            <input type="text" class="form-control" id="supply" required>
+        </div>
+        <div class="mb-3">
+            <label for="demand" class="form-label">Demand (comma-separated)</label>
+            <input type="text" class="form-control" id="demand" required>
+        </div>
+        <div class="mb-3">
+            <label for="costs" class="form-label">Cost Matrix (comma-separated rows)</label>
+            <textarea class="form-control" id="costs" rows="4" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Solve</button>
+    </form>
+    <h3 class="mt-4">Result:</h3>
+    <pre id="transportResult"></pre>
+</div>
+
+<script>
+document.getElementById("transportForm").addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    let supply = document.getElementById("supply").value.split(",").map(Number);
+    let demand = document.getElementById("demand").value.split(",").map(Number);
+    let costs = document.getElementById("costs").value.split("\n").map(row => row.split(",").map(Number));
+
+    fetch("/api/transport", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({supply, demand, costs})
+    })
+    .then(response => response.json())
+    .then(data => document.getElementById("transportResult").textContent = JSON.stringify(data, null, 2));
+});
+</script>
+{% endblock %}

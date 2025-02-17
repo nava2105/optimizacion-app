@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h2>Linear Programming Solver</h2>
+    <form id="linearForm">
+        <div class="mb-3">
+            <label for="objective" class="form-label">Objective Coefficients (comma-separated)</label>
+            <input type="text" class="form-control" id="objective" required>
+        </div>
+        <div class="mb-3">
+            <label for="constraints" class="form-label">Constraints (each row: coefficients, operator, rhs)</label>
+            <textarea class="form-control" id="constraints" rows="4" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Solve</button>
+    </form>
+    <h3 class="mt-4">Result:</h3>
+    <pre id="linearResult"></pre>
+</div>
+
+<script>
+document.getElementById("linearForm").addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    let objective = document.getElementById("objective").value.split(",").map(Number);
+    let constraints = document.getElementById("constraints").value.split("\n").map(line => {
+        let parts = line.split(",");
+        return {
+            "coefficients": parts.slice(0, -2).map(Number),
+            "operator": parts[parts.length - 2],
+            "rhs": Number(parts[parts.length - 1])
+        };
+    });
+
+    // Ensure bounds exist (assuming all variables are non-negative)
+    let bounds = Array(objective.length).fill([0, null]);
+
+    fetch("/api/linear-programming", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({objective, constraints, bounds})
+    })
+    .then(response => response.json())
+    .then(data => document.getElementById("linearResult").textContent = JSON.stringify(data, null, 2))
+    .catch(error => console.error("Error:", error));
+});
+
+</script>
+{% endblock %}

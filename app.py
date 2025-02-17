@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_restful import Api, Resource
 from models.linear_programming import solve_linear_programming
 from models.transport import solve_transport_problem
@@ -10,6 +10,7 @@ from ai.sensitivity_analysis import analyze_sensitivity
 app = Flask(__name__)
 api = Api(app)
 
+# ------------------- API ROUTES -------------------
 class LinearProgrammingAPI(Resource):
     def post(self):
         data = request.get_json()
@@ -46,12 +47,41 @@ class SensitivityAnalysisAPI(Resource):
         result = analyze_sensitivity(data)
         return jsonify(result)
 
-api.add_resource(LinearProgrammingAPI, "/linear-programming")
-api.add_resource(TransportAPI, "/transport")
-api.add_resource(NetworkAPI, "/network")
-api.add_resource(InventoryAPI, "/inventory")
-api.add_resource(DynamicProgrammingAPI, "/dynamic-programming")
-api.add_resource(SensitivityAnalysisAPI, "/sensitivity-analysis")
+api.add_resource(LinearProgrammingAPI, "/api/linear-programming")
+api.add_resource(TransportAPI, "/api/transport")
+api.add_resource(NetworkAPI, "/api/network")
+api.add_resource(InventoryAPI, "/api/inventory")
+api.add_resource(DynamicProgrammingAPI, "/api/dynamic-programming")
+api.add_resource(SensitivityAnalysisAPI, "/api/sensitivity-analysis")
+
+# ------------------- FRONTEND ROUTES -------------------
+@app.route('/')
+def index():
+    return render_template("index.html")
+
+@app.route('/linear-programming')
+def linear_programming():
+    return render_template("linear_programming.html")
+
+@app.route('/transport')
+def transport():
+    return render_template("transport.html")
+
+@app.route('/network')
+def network():
+    return render_template("network.html")
+
+@app.route('/inventory')
+def inventory():
+    return render_template("inventory.html")
+
+@app.route('/dynamic-programming')
+def dynamic_programming():
+    return render_template("dynamic_programming.html")
+
+@app.route('/sensitivity-analysis')
+def sensitivity_analysis():
+    return render_template("sensitivity_analysis.html")
 
 if __name__ == "__main__":
     app.run(debug=True)

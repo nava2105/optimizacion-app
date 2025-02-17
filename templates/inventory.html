@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h2>Inventory Optimization</h2>
+    <form id="inventoryForm">
+        <div class="mb-3">
+            <label for="demand" class="form-label">Annual Demand</label>
+            <input type="number" class="form-control" id="demand" required>
+        </div>
+        <div class="mb-3">
+            <label for="ordering_cost" class="form-label">Ordering Cost</label>
+            <input type="number" class="form-control" id="ordering_cost" required>
+        </div>
+        <div class="mb-3">
+            <label for="holding_cost" class="form-label">Holding Cost per Unit</label>
+            <input type="number" class="form-control" id="holding_cost" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Solve</button>
+    </form>
+    <h3 class="mt-4">Result:</h3>
+    <pre id="inventoryResult"></pre>
+</div>
+
+<script>
+document.getElementById("inventoryForm").addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    let demand = Number(document.getElementById("demand").value);
+    let ordering_cost = Number(document.getElementById("ordering_cost").value);
+    let holding_cost = Number(document.getElementById("holding_cost").value);
+
+    fetch("/api/inventory", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({demand, ordering_cost, holding_cost})
+    })
+    .then(response => response.json())
+    .then(data => document.getElementById("inventoryResult").textContent = JSON.stringify(data, null, 2));
+});
+</script>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h2>Sensitivity Analysis</h2>
+    <form id="sensitivityForm">
+        <div class="mb-3">
+            <label for="scenarios" class="form-label">Scenarios (comma-separated values per line)</label>
+            <textarea class="form-control" id="scenarios" rows="5" required></textarea>
+        </div>
+        <div class="mb-3">
+            <label for="objective_values" class="form-label">Objective Values (comma-separated)</label>
+            <input type="text" class="form-control" id="objective_values" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Analyze</button>
+    </form>
+    <h3 class="mt-4">Result:</h3>
+    <pre id="sensitivityResult"></pre>
+</div>
+
+<script>
+document.getElementById("sensitivityForm").addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    let scenarios = document.getElementById("scenarios").value.split("\n").map(line => line.split(",").map(Number));
+    let objective_values = document.getElementById("objective_values").value.split(",").map(Number);
+
+    fetch("/api/sensitivity-analysis", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({scenarios, objective_values})
+    })
+    .then(response => response.json())
+    .then(data => document.getElementById("sensitivityResult").textContent = JSON.stringify(data, null, 2));
+});
+</script>
+{% endblock %}

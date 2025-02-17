@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h2>Network Flow Optimization</h2>
+    <form id="networkForm">
+        <div class="mb-3">
+            <label for="edges" class="form-label">Edges (from,to,capacity per line)</label>
+            <textarea class="form-control" id="edges" rows="5" required></textarea>
+        </div>
+        <div class="mb-3">
+            <label for="source" class="form-label">Source Node</label>
+            <input type="text" class="form-control" id="source" required>
+        </div>
+        <div class="mb-3">
+            <label for="sink" class="form-label">Sink Node</label>
+            <input type="text" class="form-control" id="sink" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Solve</button>
+    </form>
+    <h3 class="mt-4">Result:</h3>
+    <pre id="networkResult"></pre>
+</div>
+
+<script>
+document.getElementById("networkForm").addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    let edges = document.getElementById("edges").value.split("\n").map(line => {
+        let parts = line.split(",");
+        return {"from": parts[0], "to": parts[1], "capacity": Number(parts[2])};
+    });
+
+    let source = document.getElementById("source").value;
+    let sink = document.getElementById("sink").value;
+
+    fetch("/api/network", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({edges, source, sink})
+    })
+    .then(response => response.json())
+    .then(data => document.getElementById("networkResult").textContent = JSON.stringify(data, null, 2));
+});
+</script>
+{% endblock %}
