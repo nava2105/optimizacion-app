@@ -13,8 +13,11 @@
         </div>
         <button type="submit" class="btn btn-primary">Solve</button>
     </form>
+
     <h3 class="mt-4">Result:</h3>
     <pre id="linearResult"></pre>
+
+    <canvas id="linearChart"></canvas>
 </div>
 
 <script>
@@ -31,7 +34,6 @@ document.getElementById("linearForm").addEventListener("submit", function(event)
         };
     });
 
-    // Ensure bounds exist (assuming all variables are non-negative)
     let bounds = Array(objective.length).fill([0, null]);
 
     fetch("/api/linear-programming", {
@@ -40,9 +42,23 @@ document.getElementById("linearForm").addEventListener("submit", function(event)
         body: JSON.stringify({objective, constraints, bounds})
     })
     .then(response => response.json())
-    .then(data => document.getElementById("linearResult").textContent = JSON.stringify(data, null, 2))
+    .then(data => {
+        document.getElementById("linearResult").textContent = JSON.stringify(data, null, 2);
+
+        const ctx = document.getElementById("linearChart").getContext("2d");
+        new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: Object.keys(data.variables),
+                datasets: [{
+                    label: "Optimal Values",
+                    data: Object.values(data.variables),
+                    backgroundColor: "rgba(75, 192, 192, 0.6)"
+                }]
+            }
+        });
+    })
     .catch(error => console.error("Error:", error));
 });
-
 </script>
 {% endblock %}

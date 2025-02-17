@@ -13,8 +13,11 @@
         </div>
         <button type="submit" class="btn btn-primary">Analyze</button>
     </form>
+
     <h3 class="mt-4">Result:</h3>
     <pre id="sensitivityResult"></pre>
+
+    <canvas id="sensitivityChart"></canvas>
 </div>
 
 <script>
@@ -30,7 +33,28 @@ document.getElementById("sensitivityForm").addEventListener("submit", function(e
         body: JSON.stringify({scenarios, objective_values})
     })
     .then(response => response.json())
-    .then(data => document.getElementById("sensitivityResult").textContent = JSON.stringify(data, null, 2));
+    .then(data => {
+        document.getElementById("sensitivityResult").textContent = JSON.stringify(data, null, 2);
+
+        let labels = scenarios.map((_, index) => `Scenario ${index + 1}`);
+        let values = data.sensitivity_coefficients;
+
+        const ctx = document.getElementById("sensitivityChart").getContext("2d");
+        new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Sensitivity Coefficients",
+                    data: values,
+                    borderColor: "rgba(255, 99, 132, 1)",
+                    backgroundColor: "rgba(255, 99, 132, 0.2)",
+                    fill: true
+                }]
+            }
+        });
+    })
+    .catch(error => console.error("Error:", error));
 });
 </script>
 {% endblock %}

@@ -13,8 +13,11 @@
         </div>
         <button type="submit" class="btn btn-primary">Solve</button>
     </form>
+
     <h3 class="mt-4">Result:</h3>
     <pre id="knapsackResult"></pre>
+
+    <canvas id="knapsackChart"></canvas>
 </div>
 
 <script>
@@ -33,7 +36,26 @@ document.getElementById("knapsackForm").addEventListener("submit", function(even
         body: JSON.stringify({capacity, items})
     })
     .then(response => response.json())
-    .then(data => document.getElementById("knapsackResult").textContent = JSON.stringify(data, null, 2));
+    .then(data => {
+        document.getElementById("knapsackResult").textContent = JSON.stringify(data, null, 2);
+
+        let labels = data.selected_items.map(item => `Weight ${item.weight}`);
+        let values = data.selected_items.map(item => item.value);
+
+        const ctx = document.getElementById("knapsackChart").getContext("2d");
+        new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Item Values",
+                    data: values,
+                    backgroundColor: "rgba(54, 162, 235, 0.6)"
+                }]
+            }
+        });
+    })
+    .catch(error => console.error("Error:", error));
 });
 </script>
 {% endblock %}

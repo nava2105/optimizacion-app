@@ -17,8 +17,11 @@
         </div>
         <button type="submit" class="btn btn-primary">Solve</button>
     </form>
+
     <h3 class="mt-4">Result:</h3>
     <pre id="networkResult"></pre>
+
+    <canvas id="networkChart"></canvas>
 </div>
 
 <script>
@@ -39,7 +42,22 @@ document.getElementById("networkForm").addEventListener("submit", function(event
         body: JSON.stringify({edges, source, sink})
     })
     .then(response => response.json())
-    .then(data => document.getElementById("networkResult").textContent = JSON.stringify(data, null, 2));
+    .then(data => {
+        document.getElementById("networkResult").textContent = JSON.stringify(data, null, 2);
+
+        const ctx = document.getElementById("networkChart").getContext("2d");
+        new Chart(ctx, {
+            type: "pie",
+            data: {
+                labels: ["Max Flow"],
+                datasets: [{
+                    data: [data.max_flow],
+                    backgroundColor: ["rgba(54, 162, 235, 0.6)"]
+                }]
+            }
+        });
+    })
+    .catch(error => console.error("Error:", error));
 });
 </script>
 {% endblock %}
