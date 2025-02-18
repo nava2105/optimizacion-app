@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container">
-    <h2>Network Flow Optimization</h2>
+    <h2>Network Analysis</h2>
     <form id="networkForm">
         <div class="mb-3">
             <label for="edges" class="form-label">Edges (from,to,capacity per line)</label>
@@ -18,7 +18,7 @@
         <button type="submit" class="btn btn-primary">Solve</button>
     </form>
 
-    <h3 class="mt-4">Result:</h3>
+    <h3 class="mt-4">Results:</h3>
     <p id="networkInterpretation"></p>
     <pre id="networkResult"></pre>
 
@@ -46,11 +46,24 @@ document.getElementById("networkForm").addEventListener("submit", function(event
     .then(data => {
         document.getElementById("networkResult").textContent = JSON.stringify(data, null, 2);
 
-        let interpretation = `The maximum possible flow from ${source} to ${sink} is ${data.max_flow}. `;
-        interpretation += "The flow distribution among edges is:\n";
-        for (let [from, targets] of Object.entries(data.flow_distribution)) {
-            interpretation += `${from} → ${JSON.stringify(targets)}\n`;
+        let interpretation = `The **maximum possible flow** from ${source} to ${sink} is **${data.max_flow}**.\n`;
+
+        if (data.shortest_path) {
+            interpretation += `The **shortest path** between ${source} and ${sink} is **${data.shortest_path.join(" → ")}**, with a length of **${data.shortest_path_length}**.\n`;
+        } else {
+            interpretation += `No valid shortest path found between ${source} and ${sink}.\n`;
         }
+
+        if (data.longest_path !== "Graph is not a DAG") {
+            interpretation += `The **longest path** (only for DAGs) is **${data.longest_path.join(" → ")}**, with a length of **${data.longest_path_length}**.\n`;
+        } else {
+            interpretation += `The graph is not a Directed Acyclic Graph (DAG), so the longest path cannot be determined.\n`;
+        }
+
+        interpretation += `\nThe **Minimum Spanning Tree (MST)** includes the following edges:\n`;
+        data.minimum_spanning_tree.forEach(edge => {
+            interpretation += `- ${edge.from} → ${edge.to} (Capacity: ${edge.capacity})\n`;
+        });
 
         document.getElementById("networkInterpretation").textContent = interpretation;
     });
