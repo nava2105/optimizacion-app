@@ -1,6 +1,58 @@
 import numpy as np
 from scipy.optimize import linprog
 
+
+def northwest_corner(supply, demand):
+    """ Implements the Northwest Corner Method to obtain an initial feasible solution. """
+    allocation = np.zeros((len(supply), len(demand)))
+    i, j = 0, 0
+    while i < len(supply) and j < len(demand):
+        min_val = min(supply[i], demand[j])
+        allocation[i, j] = min_val
+        supply[i] -= min_val
+        demand[j] -= min_val
+        if supply[i] == 0:
+            i += 1
+        if demand[j] == 0:
+            j += 1
+    return allocation
+
+
+def minimum_cost_method(costs, supply, demand):
+    """ Implements the Minimum Cost Method to obtain an initial feasible solution. """
+    allocation = np.zeros((len(supply), len(demand)))
+    costs = np.array(costs)
+    while np.sum(supply) > 0 and np.sum(demand) > 0:
+        i, j = np.unravel_index(np.argmin(costs), costs.shape)
+        min_val = min(supply[i], demand[j])
+        allocation[i, j] = min_val
+        supply[i] -= min_val
+        demand[j] -= min_val
+        costs[i, j] = 1e9  # Mark cell as used with a large finite number
+    return allocation
+
+
+def vogel_method(costs, supply, demand):
+    """ Implements Vogel's Approximation Method to obtain an initial feasible solution. """
+    allocation = np.zeros((len(supply), len(demand)), dtype=float)  # Ensure float type
+    costs = np.array(costs, dtype=float)  # Convert costs to float
+    while np.sum(supply) > 0 and np.sum(demand) > 0:
+        row_penalty = np.partition(costs, 1, axis=1)[:, 1] - costs.min(axis=1)
+        col_penalty = np.partition(costs, 1, axis=0)[1] - costs.min(axis=0)
+        if max(row_penalty) >= max(col_penalty):
+            i = np.argmax(row_penalty)
+            j = np.argmin(costs[i])
+        else:
+            j = np.argmax(col_penalty)
+            i = np.argmin(costs[:, j])
+        min_val = min(supply[i], demand[j])
+        allocation[i, j] = min_val
+        supply[i] -= min_val
+        demand[j] -= min_val
+        costs[i, j] = 1e9  # Assign a large number instead of np.inf
+    return allocation
+
+
 def solve_transport_problem(data):
     """
     Solves the transportation problem, considering:
@@ -15,64 +67,28 @@ def solve_transport_problem(data):
             [9, 12, 7, 5],
             [14, 9, 16, 12]
         ],
-        "optimization_type": "min"  # "min" for cost minimization, "max" for profit maximization
+        "optimization_type": "min"  # "min" for cost minimization, "max" for profit maximization,
+        "method": "vogel", "norwest_corner", "minimum_cost_method"
     }
     """
-
     supply = np.array(data["supply"])
     demand = np.array(data["demand"])
     costs = np.array(data["costs"])
+    method = data.get("method", "northwest_corner")
 
-    num_sources = len(supply)
-    num_destinations = len(demand)
-
-    # Objective function coefficients (flattened cost matrix)
-    c = costs.flatten()
-    if data.get("optimization_type", "min") == "max":
-        c = -c  # Convert to maximization by negating the costs
-
-    # Constraint matrix
-    A_eq = np.zeros((num_sources + num_destinations, num_sources * num_destinations))
-    b_eq = np.concatenate([supply, demand])
-
-    for i in range(num_sources):
-        A_eq[i, i * num_destinations:(i + 1) * num_destinations] = 1
-
-    for j in range(num_destinations):
-        A_eq[num_sources + j, j::num_destinations] = 1
-
-    bounds = [(0, None) for _ in range(num_sources * num_destinations)]
-
-    # Solve the optimization problem
-    result = linprog(c, A_eq=A_eq, b_eq=b_eq, bounds=bounds, method="highs")
-
-    # Check feasibility
-    total_supply = sum(supply)
-    total_demand = sum(demand)
-    feasibility = "Feasible" if total_supply == total_demand else "Infeasible (Supply-Demand Mismatch)"
-
-    if result.success:
-        transport_plan = result.x.reshape(num_sources, num_destinations).tolist()
-        optimal_cost = -result.fun if data.get("optimization_type", "min") == "max" else result.fun
-
-        # Identify unused supply or excess demand
-        used_supply = np.sum(result.x.reshape(num_sources, num_destinations), axis=1)
-        unused_supply = [supply[i] - used_supply[i] for i in range(num_sources)]
-
-        used_demand = np.sum(result.x.reshape(num_sources, num_destinations), axis=0)
-        unmet_demand = [demand[j] - used_demand[j] for j in range(num_destinations)]
-
-        return {
-            "status": "success",
-            "cost": optimal_cost,
-            "transport_plan": transport_plan,
-            "feasibility": feasibility,
-            "unused_supply": unused_supply,
-            "unmet_demand": unmet_demand
-        }
+    if method == "northwest_corner":
+        allocation = northwest_corner(supply.copy(), demand.copy())
+    elif method == "minimum_cost":
+        allocation = minimum_cost_method(costs.copy(), supply.copy(), demand.copy())
+    elif method == "vogel":
+        allocation = vogel_method(costs.copy(), supply.copy(), demand.copy())
     else:
-        return {
-            "status": "failure",
-            "message": "Failed to solve transportation problem",
-            "feasibility": feasibility
-        }
+        return {"status": "failure", "message": "Invalid method selected"}
+
+    total_cost = np.sum(allocation * costs)
+    return {
+        "status": "success",
+        "method": method,
+        "allocation": allocation.tolist(),
+        "total_cost": total_cost
+    }

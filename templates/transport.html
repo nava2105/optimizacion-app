@@ -16,19 +16,19 @@
             <textarea class="form-control" id="costs" rows="4" required></textarea>
         </div>
         <div class="mb-3">
-            <label for="optimizationType" class="form-label">Optimization Type</label>
-            <select class="form-control" id="optimizationType">
-                <option value="min">Minimization (Cost)</option>
-                <option value="max">Maximization (Profit)</option>
+            <label for="method" class="form-label">Solving Method</label>
+            <select class="form-control" id="method">
+                <option value="northwest_corner">Northwest Corner</option>
+                <option value="minimum_cost">Minimum Cost</option>
+                <option value="vogel">Vogel's Approximation</option>
             </select>
         </div>
         <button type="submit" class="btn btn-primary">Solve</button>
     </form>
 
     <h3 class="mt-4">Results:</h3>
-    <p><strong>Optimization Type:</strong> <span id="optType"></span></p>
-    <p><strong>Feasibility:</strong> <span id="feasibility"></span></p>
-    <p><strong>Total Cost/Profit:</strong> <span id="totalCost"></span></p>
+    <p><strong>Method Used:</strong> <span id="methodUsed"></span></p>
+    <p><strong>Total Cost:</strong> <span id="totalCost"></span></p>
 
     <h4>Transport Plan</h4>
     <table class="table table-bordered">
@@ -38,13 +38,8 @@
         <tbody id="transportTable"></tbody>
     </table>
 
-    <h4>Unused Supply</h4>
-    <ul id="unusedSupply"></ul>
-
-    <h4>Unmet Demand</h4>
-    <ul id="unmetDemand"></ul>
-
-    <canvas id="transportChart"></canvas>
+    <button id="optimalityTest" class="btn btn-secondary mt-3" style="display:none;">Perform Optimality Test</button>
+    <p id="optimalityResult" class="mt-2"></p>
 </div>
 
 <script>
@@ -54,51 +49,29 @@ document.getElementById("transportForm").addEventListener("submit", function(eve
     let supply = document.getElementById("supply").value.split(",").map(Number);
     let demand = document.getElementById("demand").value.split(",").map(Number);
     let costs = document.getElementById("costs").value.split("\n").map(row => row.split(",").map(Number));
-    let optimizationType = document.getElementById("optimizationType").value;
+    let method = document.getElementById("method").value;
 
     fetch("/api/transport", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({supply, demand, costs, optimization_type: optimizationType})
+        body: JSON.stringify({supply, demand, costs, method})
     })
     .then(response => response.json())
     .then(data => {
-        document.getElementById("optType").textContent = optimizationType === "min" ? "Minimization (Cost)" : "Maximization (Profit)";
-        document.getElementById("feasibility").textContent = data.feasibility;
-        document.getElementById("totalCost").textContent = data.cost;
-
-        // Populate Transport Plan Table
-        let transportHeaders = document.getElementById("transportHeaders");
-        transportHeaders.innerHTML = "<th>Source → Destination</th>" + demand.map((_, j) => `<th>D${j + 1}</th>`).join("");
+        document.getElementById("methodUsed").textContent = data.method;
+        document.getElementById("totalCost").textContent = data.total_cost;
+        document.getElementById("optimalityTest").style.display = "block";
 
         let transportTable = document.getElementById("transportTable");
-        transportTable.innerHTML = data.transport_plan.map((row, i) =>
-            `<tr><th>Source ${i + 1}</th>${row.map(val => `<td>${val}</td>`).join("")}</tr>`
+        transportTable.innerHTML = data.allocation.map((row, i) =>
+            `<tr>${row.map(val => `<td>${val}</td>`).join("")}</tr>`
         ).join("");
-
-        // Unused Supply
-        let unusedSupply = document.getElementById("unusedSupply");
-        unusedSupply.innerHTML = data.unused_supply.map((val, i) => `<li>Source ${i + 1}: ${val} units remaining</li>`).join("");
-
-        // Unmet Demand
-        let unmetDemand = document.getElementById("unmetDemand");
-        unmetDemand.innerHTML = data.unmet_demand.map((val, j) => `<li>Destination ${j + 1}: ${val} units unmet</li>`).join("");
-
-        // Chart
-        const ctx = document.getElementById("transportChart").getContext("2d");
-        new Chart(ctx, {
-            type: "bar",
-            data: {
-                labels: ["Total Cost/Profit"],
-                datasets: [{
-                    label: "Transport Cost/Profit",
-                    data: [data.cost],
-                    backgroundColor: "rgba(255, 99, 132, 0.6)"
-                }]
-            }
-        });
     })
     .catch(error => console.error("Error:", error));
+});
+
+document.getElementById("optimalityTest").addEventListener("click", function() {
+    document.getElementById("optimalityResult").textContent = "Performing optimality test... (to be implemented)";
 });
 </script>
 {% endblock %}

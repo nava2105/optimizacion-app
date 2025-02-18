@@ -18,6 +18,15 @@
                 <option value="min">Minimization</option>
             </select>
         </div>
+        <div class="mb-3">
+            <label for="method" class="form-label">Solving Method</label>
+            <select class="form-control" id="method">
+                <option value="simplex">Simplex</option>
+                <option value="big_m">Big M</option>
+                <option value="two_phase">Two-Phase</option>
+                <option value="dual">Dual Simplex</option>
+            </select>
+        </div>
         <button type="submit" class="btn btn-primary">Solve</button>
     </form>
 
@@ -53,12 +62,13 @@ document.getElementById("linearForm").addEventListener("submit", function(event)
     });
 
     let optimizationType = document.getElementById("optimizationType").value;
+    let method = document.getElementById("method").value;
     let bounds = Array(objective.length).fill([0, null]);
 
     fetch("/api/linear-programming", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({objective, constraints, bounds, optimization_type: optimizationType})
+        body: JSON.stringify({objective, constraints, bounds, optimization_type: optimizationType, method})
     })
     .then(response => response.json())
     .then(data => {

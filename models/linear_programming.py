@@ -1,4 +1,5 @@
-from pulp import LpMaximize, LpMinimize, LpProblem, LpVariable, lpSum
+from pulp import LpMaximize, LpMinimize, LpProblem, LpVariable, lpSum, PULP_CBC_CMD
+from scipy.optimize import linprog
 
 def solve_linear_programming(data):
     """
@@ -9,7 +10,8 @@ def solve_linear_programming(data):
             {"coefficients": [1, 2], "operator": "<=", "rhs": 6}
         ],
         "bounds": [(0, None), (0, None)],  # Variable bounds
-        "optimization_type": "max"  # "max" for maximization, "min" for minimization
+        "optimization_type": "max"  # "max" for maximization, "min" for minimization,
+        "method": "simplex", "big_m", "two_phases", "dual"
     }
     """
     num_vars = len(data["objective"])
@@ -34,8 +36,29 @@ def solve_linear_programming(data):
         elif constraint["operator"] == "=":
             model += expression == constraint["rhs"]
 
-    # Solve the model
-    model.solve()
+    # Select method
+    method = data.get("method", "simplex")
+
+    if method == "big_m":
+        model.solve(PULP_CBC_CMD(msg=False))  # PuLP automatically applies Big-M if needed
+    elif method == "two_phase":
+        model.solve(PULP_CBC_CMD(msg=False))  # PuLP uses a two-phase method by default
+    elif method == "simplex":
+        model.solve(PULP_CBC_CMD(msg=False))  # PuLP's default solver (simplex-based)
+    elif method == "dual":
+        c = [-c for c in data["objective"]] if opt_type == LpMaximize else data["objective"]
+        A = [constraint["coefficients"] for constraint in data["constraints"]]
+        b = [constraint["rhs"] for constraint in data["constraints"]]
+        res = linprog(c, A_eq=A if "=" in [c["operator"] for c in data["constraints"]] else None,
+                      A_ub=A if "<=" in [c["operator"] for c in data["constraints"]] else None,
+                      b_eq=b if "=" in [c["operator"] for c in data["constraints"]] else None,
+                      b_ub=b if "<=" in [c["operator"] for c in data["constraints"]] else None,
+                      method="highs-ds")
+        return {
+            "status": res.status,
+            "objective_value": res.fun,
+            "variables": {f"x{i}": res.x[i] for i in range(len(res.x))}
+        }
 
     return {
         "status": model.status,
