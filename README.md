@@ -53,11 +53,14 @@ The application is built using **Flask** for the backend, and it provides both a
 ---
 
 ## **Installation**
-### 🔹 **Prerequisites**
+
+### Via Github
+
+#### - **Prerequisites**
 - **Python 3.9**
 - **pip** installed
 
-### 🔹 **Steps**
+#### - **Steps**
 1. Clone the repository:
     ```bash
     git clone https://github.com/nava2105/optimizacion-app.git
@@ -72,11 +75,26 @@ The application is built using **Flask** for the backend, and it provides both a
     python app.py
     ```
 
+### Via Dockerhub
+
+#### - **Prerequisites**
+- **Docker running**
+
+#### - **Steps**
+1. Clone the repository:
+    ```bash
+    docker pull na4va4/optimization-app
+    ```
+2. Run the application:
+    ```bash
+    docker run -p 5000:5000 na4va4/optimization-app
+    ```
+   
 ---
 
 ## **Usage**
 
-* Web UI: Open http://127.0.0.1:5000/
+* Web UI: Open http://localhost:5000/
 * API Access: Use endpoints to solve problems programmatically.
 
 ---
