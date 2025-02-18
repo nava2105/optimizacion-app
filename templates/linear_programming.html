@@ -22,6 +22,7 @@
     </form>
 
     <h3 class="mt-4">Result:</h3>
+    <p id="linearInterpretation"></p>
     <pre id="linearResult"></pre>
 
     <canvas id="linearChart"></canvas>
@@ -52,6 +53,11 @@ document.getElementById("linearForm").addEventListener("submit", function(event)
     .then(response => response.json())
     .then(data => {
         document.getElementById("linearResult").textContent = JSON.stringify(data, null, 2);
+
+        let interpretation = `The ${optimizationType} process resulted in an optimal objective value of ${data.objective_value}. The values for decision variables are: `;
+        interpretation += Object.entries(data.variables).map(([key, value]) => `${key} = ${value}`).join(", ") + ".";
+
+        document.getElementById("linearInterpretation").textContent = interpretation;
 
         const ctx = document.getElementById("linearChart").getContext("2d");
         new Chart(ctx, {

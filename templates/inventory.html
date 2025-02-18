@@ -17,7 +17,9 @@
         </div>
         <button type="submit" class="btn btn-primary">Solve</button>
     </form>
+
     <h3 class="mt-4">Result:</h3>
+    <p id="inventoryInterpretation"></p>
     <pre id="inventoryResult"></pre>
 </div>
 
@@ -35,7 +37,14 @@ document.getElementById("inventoryForm").addEventListener("submit", function(eve
         body: JSON.stringify({demand, ordering_cost, holding_cost})
     })
     .then(response => response.json())
-    .then(data => document.getElementById("inventoryResult").textContent = JSON.stringify(data, null, 2));
+    .then(data => {
+        document.getElementById("inventoryResult").textContent = JSON.stringify(data, null, 2);
+
+        let interpretation = `The Economic Order Quantity (EOQ) is ${data.eoq}, meaning that you should order this quantity each time. `;
+        interpretation += `You should place approximately ${data.annual_orders} orders per year, with an average time of ${data.cycle_time} days between orders.`;
+
+        document.getElementById("inventoryInterpretation").textContent = interpretation;
+    });
 });
 </script>
 {% endblock %}

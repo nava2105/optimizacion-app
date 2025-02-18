@@ -26,6 +26,7 @@
     </form>
 
     <h3 class="mt-4">Result:</h3>
+    <p id="transportInterpretation"></p>
     <pre id="transportResult"></pre>
 
     <canvas id="transportChart"></canvas>
@@ -48,6 +49,13 @@ document.getElementById("transportForm").addEventListener("submit", function(eve
     .then(response => response.json())
     .then(data => {
         document.getElementById("transportResult").textContent = JSON.stringify(data, null, 2);
+
+        let interpretation = `The ${optimizationType} process resulted in an optimal total cost of ${data.cost}. The transport plan is as follows: `;
+        data.transport_plan.forEach((row, i) => {
+            interpretation += `\n Source ${i + 1}: ` + row.join(", ");
+        });
+
+        document.getElementById("transportInterpretation").textContent = interpretation;
 
         const ctx = document.getElementById("transportChart").getContext("2d");
         new Chart(ctx, {

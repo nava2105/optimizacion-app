@@ -19,6 +19,7 @@
     </form>
 
     <h3 class="mt-4">Result:</h3>
+    <p id="networkInterpretation"></p>
     <pre id="networkResult"></pre>
 
     <canvas id="networkChart"></canvas>
@@ -45,19 +46,14 @@ document.getElementById("networkForm").addEventListener("submit", function(event
     .then(data => {
         document.getElementById("networkResult").textContent = JSON.stringify(data, null, 2);
 
-        const ctx = document.getElementById("networkChart").getContext("2d");
-        new Chart(ctx, {
-            type: "pie",
-            data: {
-                labels: ["Max Flow"],
-                datasets: [{
-                    data: [data.max_flow],
-                    backgroundColor: ["rgba(54, 162, 235, 0.6)"]
-                }]
-            }
-        });
-    })
-    .catch(error => console.error("Error:", error));
+        let interpretation = `The maximum possible flow from ${source} to ${sink} is ${data.max_flow}. `;
+        interpretation += "The flow distribution among edges is:\n";
+        for (let [from, targets] of Object.entries(data.flow_distribution)) {
+            interpretation += `${from} → ${JSON.stringify(targets)}\n`;
+        }
+
+        document.getElementById("networkInterpretation").textContent = interpretation;
+    });
 });
 </script>
 {% endblock %}
