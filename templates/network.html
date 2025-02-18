@@ -19,8 +19,27 @@
     </form>
 
     <h3 class="mt-4">Results:</h3>
-    <p id="networkInterpretation"></p>
-    <pre id="networkResult"></pre>
+    <p><strong>Max Flow:</strong> <span id="maxFlow"></span></p>
+
+    <h4>Shortest Path</h4>
+    <p><strong>Path:</strong> <span id="shortestPath"></span></p>
+    <p><strong>Length:</strong> <span id="shortestPathLength"></span></p>
+
+    <h4>Longest Path</h4>
+    <p><strong>Path:</strong> <span id="longestPath"></span></p>
+    <p><strong>Length:</strong> <span id="longestPathLength"></span></p>
+
+    <h4>Minimum Spanning Tree</h4>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>From</th>
+                <th>To</th>
+                <th>Capacity</th>
+            </tr>
+        </thead>
+        <tbody id="mstTable"></tbody>
+    </table>
 
     <canvas id="networkChart"></canvas>
 </div>
@@ -44,29 +63,31 @@ document.getElementById("networkForm").addEventListener("submit", function(event
     })
     .then(response => response.json())
     .then(data => {
-        document.getElementById("networkResult").textContent = JSON.stringify(data, null, 2);
+        document.getElementById("maxFlow").textContent = data.max_flow;
+        document.getElementById("shortestPath").textContent = data.shortest_path ? data.shortest_path.join(" → ") : "No Path Found";
+        document.getElementById("shortestPathLength").textContent = data.shortest_path_length;
+        document.getElementById("longestPath").textContent = data.longest_path !== "Graph is not a DAG" ? data.longest_path.join(" → ") : "Not Applicable";
+        document.getElementById("longestPathLength").textContent = data.longest_path_length !== "N/A" ? data.longest_path_length : "N/A";
 
-        let interpretation = `The **maximum possible flow** from ${source} to ${sink} is **${data.max_flow}**.\n`;
+        let mstTable = document.getElementById("mstTable");
+        mstTable.innerHTML = data.minimum_spanning_tree.map(edge =>
+            `<tr><td>${edge.from}</td><td>${edge.to}</td><td>${edge.capacity}</td></tr>`
+        ).join("");
 
-        if (data.shortest_path) {
-            interpretation += `The **shortest path** between ${source} and ${sink} is **${data.shortest_path.join(" → ")}**, with a length of **${data.shortest_path_length}**.\n`;
-        } else {
-            interpretation += `No valid shortest path found between ${source} and ${sink}.\n`;
-        }
-
-        if (data.longest_path !== "Graph is not a DAG") {
-            interpretation += `The **longest path** (only for DAGs) is **${data.longest_path.join(" → ")}**, with a length of **${data.longest_path_length}**.\n`;
-        } else {
-            interpretation += `The graph is not a Directed Acyclic Graph (DAG), so the longest path cannot be determined.\n`;
-        }
-
-        interpretation += `\nThe **Minimum Spanning Tree (MST)** includes the following edges:\n`;
-        data.minimum_spanning_tree.forEach(edge => {
-            interpretation += `- ${edge.from} → ${edge.to} (Capacity: ${edge.capacity})\n`;
+        const ctx = document.getElementById("networkChart").getContext("2d");
+        new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: ["Max Flow"],
+                datasets: [{
+                    label: "Max Flow Value",
+                    data: [data.max_flow],
+                    backgroundColor: "rgba(75, 192, 192, 0.6)"
+                }]
+            }
         });
-
-        document.getElementById("networkInterpretation").textContent = interpretation;
-    });
+    })
+    .catch(error => console.error("Error:", error));
 });
 </script>
 {% endblock %}

@@ -3,10 +3,14 @@ from scipy.optimize import linprog
 
 def solve_transport_problem(data):
     """
+    Solves the transportation problem, considering:
+    - Minimization (cost) or Maximization (profit).
+    - Checks for feasibility and optimality conditions.
+
     data = {
-        "supply": [20, 30, 25],  # Supply at each source
-        "demand": [10, 15, 20, 30],  # Demand at each destination
-        "costs": [  # Cost matrix
+        "supply": [20, 30, 25],
+        "demand": [10, 15, 20, 30],
+        "costs": [
             [8, 6, 10, 9],
             [9, 12, 7, 5],
             [14, 9, 16, 12]
@@ -42,9 +46,33 @@ def solve_transport_problem(data):
     # Solve the optimization problem
     result = linprog(c, A_eq=A_eq, b_eq=b_eq, bounds=bounds, method="highs")
 
+    # Check feasibility
+    total_supply = sum(supply)
+    total_demand = sum(demand)
+    feasibility = "Feasible" if total_supply == total_demand else "Infeasible (Supply-Demand Mismatch)"
+
     if result.success:
         transport_plan = result.x.reshape(num_sources, num_destinations).tolist()
         optimal_cost = -result.fun if data.get("optimization_type", "min") == "max" else result.fun
-        return {"status": "success", "cost": optimal_cost, "transport_plan": transport_plan}
+
+        # Identify unused supply or excess demand
+        used_supply = np.sum(result.x.reshape(num_sources, num_destinations), axis=1)
+        unused_supply = [supply[i] - used_supply[i] for i in range(num_sources)]
+
+        used_demand = np.sum(result.x.reshape(num_sources, num_destinations), axis=0)
+        unmet_demand = [demand[j] - used_demand[j] for j in range(num_destinations)]
+
+        return {
+            "status": "success",
+            "cost": optimal_cost,
+            "transport_plan": transport_plan,
+            "feasibility": feasibility,
+            "unused_supply": unused_supply,
+            "unmet_demand": unmet_demand
+        }
     else:
-        return {"status": "failure", "message": "Failed to solve transportation problem"}
+        return {
+            "status": "failure",
+            "message": "Failed to solve transportation problem",
+            "feasibility": feasibility
+        }

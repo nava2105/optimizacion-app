@@ -14,11 +14,16 @@
         <button type="submit" class="btn btn-primary">Analyze</button>
     </form>
 
-    <h3 class="mt-4">Result:</h3>
-    <p id="sensitivityInterpretation"></p>
-    <pre id="sensitivityResult"></pre>
-
-    <canvas id="sensitivityChart"></canvas>
+    <h3 class="mt-4">Results:</h3>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Scenario</th>
+                <th>Sensitivity Coefficient</th>
+            </tr>
+        </thead>
+        <tbody id="sensitivityTable"></tbody>
+    </table>
 </div>
 
 <script>
@@ -35,37 +40,10 @@ document.getElementById("sensitivityForm").addEventListener("submit", function(e
     })
     .then(response => response.json())
     .then(data => {
-        document.getElementById("sensitivityResult").textContent = JSON.stringify(data, null, 2);
-
-        let interpretation = `The sensitivity analysis has evaluated ${scenarios.length} different scenarios. `;
-        interpretation += `The calculated sensitivity coefficients indicate how changes in input parameters affect the objective value.`;
-
-        let maxImpactIndex = data.sensitivity_coefficients.indexOf(Math.max(...data.sensitivity_coefficients));
-        let minImpactIndex = data.sensitivity_coefficients.indexOf(Math.min(...data.sensitivity_coefficients));
-
-        interpretation += `\n- The scenario with the **highest impact** on the objective function is Scenario ${maxImpactIndex + 1}, with a sensitivity coefficient of ${data.sensitivity_coefficients[maxImpactIndex]}.`;
-        interpretation += `\n- The scenario with the **lowest impact** is Scenario ${minImpactIndex + 1}, with a coefficient of ${data.sensitivity_coefficients[minImpactIndex]}.`;
-        interpretation += `\nThese results can help in prioritizing factors that significantly influence the optimization problem.`;
-
-        document.getElementById("sensitivityInterpretation").textContent = interpretation;
-
-        let labels = scenarios.map((_, index) => `Scenario ${index + 1}`);
-        let values = data.sensitivity_coefficients;
-
-        const ctx = document.getElementById("sensitivityChart").getContext("2d");
-        new Chart(ctx, {
-            type: "line",
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: "Sensitivity Coefficients",
-                    data: values,
-                    borderColor: "rgba(255, 99, 132, 1)",
-                    backgroundColor: "rgba(255, 99, 132, 0.2)",
-                    fill: true
-                }]
-            }
-        });
+        let tableBody = document.getElementById("sensitivityTable");
+        tableBody.innerHTML = data.sensitivity_coefficients.map((value, index) =>
+            `<tr><td>Scenario ${index + 1}</td><td>${value}</td></tr>`
+        ).join("");
     })
     .catch(error => console.error("Error:", error));
 });

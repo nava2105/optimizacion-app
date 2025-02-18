@@ -18,9 +18,12 @@
         <button type="submit" class="btn btn-primary">Solve</button>
     </form>
 
-    <h3 class="mt-4">Result:</h3>
-    <p id="inventoryInterpretation"></p>
-    <pre id="inventoryResult"></pre>
+    <h3 class="mt-4">Results:</h3>
+    <table class="table table-bordered">
+        <tr><th>Economic Order Quantity (EOQ)</th><td id="eoqValue"></td></tr>
+        <tr><th>Annual Orders</th><td id="annualOrders"></td></tr>
+        <tr><th>Time Between Orders (Days)</th><td id="cycleTime"></td></tr>
+    </table>
 </div>
 
 <script>
@@ -38,12 +41,9 @@ document.getElementById("inventoryForm").addEventListener("submit", function(eve
     })
     .then(response => response.json())
     .then(data => {
-        document.getElementById("inventoryResult").textContent = JSON.stringify(data, null, 2);
-
-        let interpretation = `The Economic Order Quantity (EOQ) is ${data.eoq}, meaning that you should order this quantity each time. `;
-        interpretation += `You should place approximately ${data.annual_orders} orders per year, with an average time of ${data.cycle_time} days between orders.`;
-
-        document.getElementById("inventoryInterpretation").textContent = interpretation;
+        document.getElementById("eoqValue").textContent = data.eoq;
+        document.getElementById("annualOrders").textContent = data.annual_orders;
+        document.getElementById("cycleTime").textContent = data.cycle_time;
     });
 });
 </script>

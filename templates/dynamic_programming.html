@@ -14,9 +14,19 @@
         <button type="submit" class="btn btn-primary">Solve</button>
     </form>
 
-    <h3 class="mt-4">Result:</h3>
-    <p id="knapsackInterpretation"></p>
-    <pre id="knapsackResult"></pre>
+    <h3 class="mt-4">Results:</h3>
+    <p><strong>Max Value:</strong> <span id="maxValue"></span></p>
+
+    <h4>Selected Items</h4>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Weight</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody id="knapsackTable"></tbody>
+    </table>
 
     <canvas id="knapsackChart"></canvas>
 </div>
@@ -38,24 +48,21 @@ document.getElementById("knapsackForm").addEventListener("submit", function(even
     })
     .then(response => response.json())
     .then(data => {
-        document.getElementById("knapsackResult").textContent = JSON.stringify(data, null, 2);
+        document.getElementById("maxValue").textContent = data.max_value;
 
-        let interpretation = `The maximum value achievable is ${data.max_value}. The selected items are: `;
-        interpretation += data.selected_items.map(item => `(Weight: ${item.weight}, Value: ${item.value})`).join(", ");
-
-        document.getElementById("knapsackInterpretation").textContent = interpretation;
-
-        let labels = data.selected_items.map(item => `Weight ${item.weight}`);
-        let values = data.selected_items.map(item => item.value);
+        let tableBody = document.getElementById("knapsackTable");
+        tableBody.innerHTML = data.selected_items.map(item =>
+            `<tr><td>${item.weight}</td><td>${item.value}</td></tr>`
+        ).join("");
 
         const ctx = document.getElementById("knapsackChart").getContext("2d");
         new Chart(ctx, {
             type: "bar",
             data: {
-                labels: labels,
+                labels: data.selected_items.map(item => `Weight ${item.weight}`),
                 datasets: [{
                     label: "Item Values",
-                    data: values,
+                    data: data.selected_items.map(item => item.value),
                     backgroundColor: "rgba(54, 162, 235, 0.6)"
                 }]
             }

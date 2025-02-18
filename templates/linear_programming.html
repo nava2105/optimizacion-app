@@ -21,9 +21,19 @@
         <button type="submit" class="btn btn-primary">Solve</button>
     </form>
 
-    <h3 class="mt-4">Result:</h3>
-    <p id="linearInterpretation"></p>
-    <pre id="linearResult"></pre>
+    <h3 class="mt-4">Results:</h3>
+    <p><strong>Optimal Objective Value:</strong> <span id="objectiveValue"></span></p>
+
+    <h4>Decision Variables</h4>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Variable</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody id="variablesTable"></tbody>
+    </table>
 
     <canvas id="linearChart"></canvas>
 </div>
@@ -52,12 +62,12 @@ document.getElementById("linearForm").addEventListener("submit", function(event)
     })
     .then(response => response.json())
     .then(data => {
-        document.getElementById("linearResult").textContent = JSON.stringify(data, null, 2);
+        document.getElementById("objectiveValue").textContent = data.objective_value;
 
-        let interpretation = `The ${optimizationType} process resulted in an optimal objective value of ${data.objective_value}. The values for decision variables are: `;
-        interpretation += Object.entries(data.variables).map(([key, value]) => `${key} = ${value}`).join(", ") + ".";
-
-        document.getElementById("linearInterpretation").textContent = interpretation;
+        let tableBody = document.getElementById("variablesTable");
+        tableBody.innerHTML = Object.entries(data.variables).map(([key, value]) =>
+            `<tr><td>${key}</td><td>${value}</td></tr>`
+        ).join("");
 
         const ctx = document.getElementById("linearChart").getContext("2d");
         new Chart(ctx, {

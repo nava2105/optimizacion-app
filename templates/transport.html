@@ -25,9 +25,24 @@
         <button type="submit" class="btn btn-primary">Solve</button>
     </form>
 
-    <h3 class="mt-4">Result:</h3>
-    <p id="transportInterpretation"></p>
-    <pre id="transportResult"></pre>
+    <h3 class="mt-4">Results:</h3>
+    <p><strong>Optimization Type:</strong> <span id="optType"></span></p>
+    <p><strong>Feasibility:</strong> <span id="feasibility"></span></p>
+    <p><strong>Total Cost/Profit:</strong> <span id="totalCost"></span></p>
+
+    <h4>Transport Plan</h4>
+    <table class="table table-bordered">
+        <thead>
+            <tr id="transportHeaders"></tr>
+        </thead>
+        <tbody id="transportTable"></tbody>
+    </table>
+
+    <h4>Unused Supply</h4>
+    <ul id="unusedSupply"></ul>
+
+    <h4>Unmet Demand</h4>
+    <ul id="unmetDemand"></ul>
 
     <canvas id="transportChart"></canvas>
 </div>
@@ -48,22 +63,35 @@ document.getElementById("transportForm").addEventListener("submit", function(eve
     })
     .then(response => response.json())
     .then(data => {
-        document.getElementById("transportResult").textContent = JSON.stringify(data, null, 2);
+        document.getElementById("optType").textContent = optimizationType === "min" ? "Minimization (Cost)" : "Maximization (Profit)";
+        document.getElementById("feasibility").textContent = data.feasibility;
+        document.getElementById("totalCost").textContent = data.cost;
 
-        let interpretation = `The ${optimizationType} process resulted in an optimal total cost of ${data.cost}. The transport plan is as follows: `;
-        data.transport_plan.forEach((row, i) => {
-            interpretation += `\n Source ${i + 1}: ` + row.join(", ");
-        });
+        // Populate Transport Plan Table
+        let transportHeaders = document.getElementById("transportHeaders");
+        transportHeaders.innerHTML = "<th>Source → Destination</th>" + demand.map((_, j) => `<th>D${j + 1}</th>`).join("");
 
-        document.getElementById("transportInterpretation").textContent = interpretation;
+        let transportTable = document.getElementById("transportTable");
+        transportTable.innerHTML = data.transport_plan.map((row, i) =>
+            `<tr><th>Source ${i + 1}</th>${row.map(val => `<td>${val}</td>`).join("")}</tr>`
+        ).join("");
 
+        // Unused Supply
+        let unusedSupply = document.getElementById("unusedSupply");
+        unusedSupply.innerHTML = data.unused_supply.map((val, i) => `<li>Source ${i + 1}: ${val} units remaining</li>`).join("");
+
+        // Unmet Demand
+        let unmetDemand = document.getElementById("unmetDemand");
+        unmetDemand.innerHTML = data.unmet_demand.map((val, j) => `<li>Destination ${j + 1}: ${val} units unmet</li>`).join("");
+
+        // Chart
         const ctx = document.getElementById("transportChart").getContext("2d");
         new Chart(ctx, {
             type: "bar",
             data: {
-                labels: ["Total Cost"],
+                labels: ["Total Cost/Profit"],
                 datasets: [{
-                    label: "Transport Cost",
+                    label: "Transport Cost/Profit",
                     data: [data.cost],
                     backgroundColor: "rgba(255, 99, 132, 0.6)"
                 }]
