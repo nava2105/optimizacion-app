@@ -11,6 +11,13 @@
             <label for="constraints" class="form-label">Constraints (each row: coefficients, operator, rhs)</label>
             <textarea class="form-control" id="constraints" rows="4" required></textarea>
         </div>
+        <div class="mb-3">
+            <label for="optimizationType" class="form-label">Optimization Type</label>
+            <select class="form-control" id="optimizationType">
+                <option value="max">Maximization</option>
+                <option value="min">Minimization</option>
+            </select>
+        </div>
         <button type="submit" class="btn btn-primary">Solve</button>
     </form>
 
@@ -34,12 +41,13 @@ document.getElementById("linearForm").addEventListener("submit", function(event)
         };
     });
 
+    let optimizationType = document.getElementById("optimizationType").value;
     let bounds = Array(objective.length).fill([0, null]);
 
     fetch("/api/linear-programming", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({objective, constraints, bounds})
+        body: JSON.stringify({objective, constraints, bounds, optimization_type: optimizationType})
     })
     .then(response => response.json())
     .then(data => {

@@ -15,6 +15,13 @@
             <label for="costs" class="form-label">Cost Matrix (comma-separated rows)</label>
             <textarea class="form-control" id="costs" rows="4" required></textarea>
         </div>
+        <div class="mb-3">
+            <label for="optimizationType" class="form-label">Optimization Type</label>
+            <select class="form-control" id="optimizationType">
+                <option value="min">Minimization (Cost)</option>
+                <option value="max">Maximization (Profit)</option>
+            </select>
+        </div>
         <button type="submit" class="btn btn-primary">Solve</button>
     </form>
 
@@ -31,11 +38,12 @@ document.getElementById("transportForm").addEventListener("submit", function(eve
     let supply = document.getElementById("supply").value.split(",").map(Number);
     let demand = document.getElementById("demand").value.split(",").map(Number);
     let costs = document.getElementById("costs").value.split("\n").map(row => row.split(",").map(Number));
+    let optimizationType = document.getElementById("optimizationType").value;
 
     fetch("/api/transport", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({supply, demand, costs})
+        body: JSON.stringify({supply, demand, costs, optimization_type: optimizationType})
     })
     .then(response => response.json())
     .then(data => {
