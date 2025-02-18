@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 from flask_restful import Api, Resource
 from models.linear_programming import solve_linear_programming
-from models.transport import solve_transport_problem
+from models.transport import solve_transport_problem, check_optimality_and_improve
 from models.network import solve_network_problem
 from models.inventory import solve_inventory_problem
 from models.dynamic_programming import solve_knapsack_problem
@@ -21,6 +21,12 @@ class TransportAPI(Resource):
     def post(self):
         data = request.get_json()
         result = solve_transport_problem(data)
+        return jsonify(result)
+
+class OptimalityAPI(Resource):
+    def post(self):
+        data = request.get_json()
+        result = check_optimality_and_improve(data["costs"], data["allocation"])
         return jsonify(result)
 
 class NetworkAPI(Resource):
@@ -55,6 +61,7 @@ class TrainSensitivityAPI(Resource):
 
 api.add_resource(LinearProgrammingAPI, "/api/linear-programming")
 api.add_resource(TransportAPI, "/api/transport")
+api.add_resource(OptimalityAPI, "/api/optimality-test")
 api.add_resource(NetworkAPI, "/api/network")
 api.add_resource(InventoryAPI, "/api/inventory")
 api.add_resource(DynamicProgrammingAPI, "/api/dynamic-programming")

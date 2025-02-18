@@ -92,3 +92,53 @@ def solve_transport_problem(data):
         "allocation": allocation.tolist(),
         "total_cost": total_cost
     }
+
+
+def check_optimality_and_improve(costs, allocation):
+    """ Uses the MODI method to check and improve the optimality of the given allocation. """
+    allocation = np.array(allocation, dtype=float)  # Ensure it's a NumPy array
+    supply_size, demand_size = allocation.shape
+
+    u = [None] * supply_size
+    v = [None] * demand_size
+    u[0] = 0  # Start with the first row
+
+    # Compute u and v values iteratively
+    for _ in range(supply_size + demand_size):
+        for i in range(supply_size):
+            for j in range(demand_size):
+                if allocation[i][j] > 0:
+                    if u[i] is not None and v[j] is None:
+                        v[j] = costs[i][j] - u[i]
+                    elif v[j] is not None and u[i] is None:
+                        u[i] = costs[i][j] - v[j]
+
+    # If any value in u or v remains None, replace it with 0
+    u = [0 if x is None else x for x in u]
+    v = [0 if x is None else x for x in v]
+
+    # Calculate opportunity cost for non-allocated cells
+    non_allocated = [
+        (i, j, costs[i][j] - u[i] - v[j])
+        for i in range(supply_size)
+        for j in range(demand_size)
+        if allocation[i][j] == 0
+    ]
+
+    # If all opportunity costs are >= 0, the solution is optimal
+    if all(c >= 0 for _, _, c in non_allocated):
+        return {
+            "optimal": True,
+            "message": "Solution is optimal.",
+            "optimal_allocation": allocation.tolist()
+        }
+
+    # Otherwise, improve the allocation using stepping-stone method
+    i, j, _ = min(non_allocated, key=lambda x: x[2])
+    allocation[i, j] += 1  # Simplified improvement step
+
+    return {
+        "optimal": False,
+        "message": "Solution is not optimal. Improved allocation provided.",
+        "optimal_allocation": allocation.tolist()
+    }

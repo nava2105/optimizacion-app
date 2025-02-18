@@ -40,6 +40,14 @@
 
     <button id="optimalityTest" class="btn btn-secondary mt-3" style="display:none;">Perform Optimality Test</button>
     <p id="optimalityResult" class="mt-2"></p>
+
+    <h4>Optimized Transport Plan</h4>
+    <table class="table table-bordered" id="optimizedTransportTable" style="display:none;">
+        <thead>
+            <tr id="optimizedTransportHeaders"></tr>
+        </thead>
+        <tbody id="optimizedTransportBody"></tbody>
+    </table>
 </div>
 
 <script>
@@ -66,12 +74,38 @@ document.getElementById("transportForm").addEventListener("submit", function(eve
         transportTable.innerHTML = data.allocation.map((row, i) =>
             `<tr>${row.map(val => `<td>${val}</td>`).join("")}</tr>`
         ).join("");
+
+        // Automatically run the optimality test
+        performOptimalityTest();
     })
     .catch(error => console.error("Error:", error));
 });
 
-document.getElementById("optimalityTest").addEventListener("click", function() {
-    document.getElementById("optimalityResult").textContent = "Performing optimality test... (to be implemented)";
-});
+function performOptimalityTest() {
+    let costs = document.getElementById("costs").value.split("\n").map(row => row.split(",").map(Number));
+    let allocation = Array.from(document.getElementById("transportTable").querySelectorAll("tr"), row =>
+        Array.from(row.querySelectorAll("td"), cell => Number(cell.textContent))
+    );
+
+    fetch("/api/optimality-test", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({costs, allocation})
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById("optimalityResult").textContent = data.message;
+        if (!data.optimal) {
+            document.getElementById("optimizedTransportTable").style.display = "block";
+            let optimizedTable = document.getElementById("optimizedTransportBody");
+            optimizedTable.innerHTML = data.optimal_allocation.map((row, i) =>
+                `<tr>${row.map(val => `<td>${val}</td>`).join("")}</tr>`
+            ).join("");
+        }
+    })
+    .catch(error => console.error("Error:", error));
+}
+
+document.getElementById("optimalityTest").addEventListener("click", performOptimalityTest);
 </script>
 {% endblock %}
