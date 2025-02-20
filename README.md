@@ -5,6 +5,7 @@
 ![NumPy](https://img.shields.io/badge/numpy-%23013243.svg?style=for-the-badge&logo=numpy&logoColor=white)
 ![PuLP](https://img.shields.io/badge/pulp-optimization-orange)
 ![NetworkX](https://img.shields.io/badge/networkx-graph%20theory-red)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fnava2105%2Foptimizacion-app.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fnava2105%2Foptimizacion-app?ref=badge_shield)
 
 ---
 
@@ -329,3 +330,7 @@ curl -X POST http://localhost:5000/api/sensitivity-analysis -H "Content-Type: ap
 **Results Displayed:**
 - Sensitivity coefficients per scenario.
 - Updated model feedback.
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fnava2105%2Foptimizacion-app.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fnava2105%2Foptimizacion-app?ref=badge_large)
